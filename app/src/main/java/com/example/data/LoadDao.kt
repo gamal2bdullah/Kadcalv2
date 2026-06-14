@@ -5,10 +5,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LoadDao {
-    @Query("SELECT * FROM loads")
+    @Query("SELECT * FROM loads ORDER BY loadId ASC")
     fun getAllLoadsFlow(): Flow<List<LoadEntity>>
 
-    @Query("SELECT * FROM loads")
+    @Query("SELECT * FROM loads ORDER BY loadId ASC")
     suspend fun getAllLoads(): List<LoadEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

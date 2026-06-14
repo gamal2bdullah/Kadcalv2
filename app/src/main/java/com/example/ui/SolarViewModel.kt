@@ -76,13 +76,20 @@ class SolarViewModel(application: Application) : AndroidViewModel(application) {
         // Observe database
         viewModelScope.launch {
             repository.allLoadsFlow.collectLatest { list ->
-                if (list.isEmpty()) {
-                    // Prepopulate basic loads to welcome users with a live dashboard
+                _loadsList.value = list
+            }
+        }
+
+        // Seed only if it is the very first run
+        val isFirstRun = sharedPrefs.getBoolean("is_first_run_v3", true)
+        if (isFirstRun) {
+            viewModelScope.launch {
+                val existing = repository.getAllLoads()
+                if (existing.isEmpty()) {
                     val preset = ApplianceLibrary.makePresetLoads("basic")
                     repository.insertLoads(preset)
-                } else {
-                    _loadsList.value = list
                 }
+                sharedPrefs.edit().putBoolean("is_first_run_v3", false).apply()
             }
         }
     }

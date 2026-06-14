@@ -221,8 +221,27 @@ object ValidationRules {
         return issues
     }
 
+    fun getSeverityPriority(severity: String): Int {
+        return when (severity.lowercase()) {
+            "error" -> 1
+            "warning" -> 2
+            "advisory" -> 3
+            "info" -> 4
+            "assumption" -> 5
+            else -> 6
+        }
+    }
+
     fun validateAllLoads(loads: List<LoadEntity>): List<RuleIssue> {
-        return loads.flatMap { validateLoad(it) }
+        val list = loads.flatMap { validateLoad(it) }
+        return list.sortedWith(
+            compareBy(
+                { getSeverityPriority(it.severity) },
+                { it.ruleId },
+                { it.loadName },
+                { it.loadId }
+            )
+        )
     }
 
     data class ValidationMatrix(

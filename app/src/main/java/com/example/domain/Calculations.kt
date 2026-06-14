@@ -50,19 +50,23 @@ object Calculations {
         return if (l.lockedRotorCurrentA > 0) {
             l.lockedRotorCurrentA * l.quantity
         } else {
-            calcFullLoadCurrent(l) * l.surgeMultiplier * l.quantity
+            calcFullLoadCurrent(l) * l.surgeMultiplier
         }
     }
 
-    fun calcDailyEnergy(l: LoadEntity, season: String = "summer"): Double {
+    fun calcDailyEnergyActiveDay(l: LoadEntity, season: String): Double {
         val running = calcRunningLoad(l)
         val ku = l.utilizationFactorKu
         val duty = l.dutyCyclePercent / 100.0
         val demand = l.demandFactor
         val dayH = if (season == "summer") l.dayHoursSummer else l.dayHoursWinter
         val nightH = if (season == "summer") l.nightHoursSummer else l.nightHoursWinter
+        return running * ku * duty * demand * (dayH + nightH)
+    }
+
+    fun calcDailyEnergy(l: LoadEntity, season: String = "summer"): Double {
         val days = l.operatingDaysPerWeek / 7.0
-        return running * ku * duty * demand * (dayH + nightH) * days
+        return calcDailyEnergyActiveDay(l, season) * days
     }
 
     fun calcDayEnergy(l: LoadEntity, season: String = "summer"): Double {
@@ -86,10 +90,10 @@ object Calculations {
     }
 
     fun calcAnnualEnergy(l: LoadEntity): Double {
-        val summer = calcDailyEnergy(l, "summer")
-        val winter = calcDailyEnergy(l, "winter")
-        val days = l.operatingDaysPerYear.toDouble()
-        return ((summer * 183.0) + (winter * 182.0)) * (days / 365.0)
+        val summerActive = calcDailyEnergyActiveDay(l, "summer")
+        val winterActive = calcDailyEnergyActiveDay(l, "winter")
+        val avgActiveWh = (summerActive * 183.0 + winterActive * 182.0) / 365.0
+        return avgActiveWh * l.operatingDaysPerYear
     }
 
     fun calcCoincidentLoad(l: LoadEntity): Double {
@@ -214,28 +218,43 @@ object Calculations {
         val totalConnected = loads.sumOf { calcConnectedLoad(it) }
         val totalRunning = loads.sumOf { calcRunningLoad(it) }
 
-        val hourly = MutableList(24) { 0.0 }
+        val hourlyP = MutableList(24) { 0.0 }
+        val hourlyQ = MutableList(24) { 0.0 }
         loads.forEach { l ->
             val profile = calcHourlyOperatingLoad(l)
+            val pf = if (l.powerFactor > 0.0 && l.powerFactor <= 1.0) l.powerFactor else 0.85
+            val tanTheta = if (pf < 1.0) sqrt(1.0 - pf * pf) / pf else 0.0
             for (i in 0 until 24) {
-                hourly[i] += profile[i]
+                val p = profile[i]
+                hourlyP[i] += p
+                hourlyQ[i] += p * tanTheta
             }
         }
-        val maxHourly = hourly.maxOrNull() ?: 0.0
+        val hourlyS = List(24) { i ->
+            sqrt(hourlyP[i] * hourlyP[i] + hourlyQ[i] * hourlyQ[i])
+        }
+        val maxHourly = hourlyP.maxOrNull() ?: 0.0
+        val maxHourlyS = hourlyS.maxOrNull() ?: 0.0
 
         val coincidentPeak = loads.sumOf { calcCoincidentLoad(it) }
         val diversified = loads.sumOf { calcDiversifiedLoad(it) }
 
-        val totalDailyWh = hourly.sum()
+        val totalDailyWh = hourlyP.sum()
         // Day hours slice (8-18 index is index 8 to 17) -> index 8 to 17 in Kotlin is (8 until 18)
-        val dayE = hourly.slice(8 until 18).sum()
+        val dayE = hourlyP.slice(8 until 18).sum()
         val nightE = totalDailyWh - dayE
 
         val maxSurge = loads.sumOf { calcSurgePower(it) }
         val peakKW = maxHourly / 1000.0
-        val peakKVA = peakKW / 0.85
+        val peakKVA = maxHourlyS / 1000.0
         val has3Phase = loads.any { it.phaseType == "3Ø" }
-        val estMaxCurrent = (peakKVA * 1000.0) / (220.0 * (if (has3Phase) sqrt(3.0) else 1.0))
+        val avg3PhaseV = loads.filter { it.phaseType == "3Ø" }.map { it.voltageNominal.toDouble() }.average().let { if (it.isNaN() || it <= 0.0) 380.0 else it }
+        val avg1PhaseV = loads.filter { it.phaseType != "3Ø" }.map { it.voltageNominal.toDouble() }.average().let { if (it.isNaN() || it <= 0.0) 220.0 else it }
+        val estMaxCurrent = if (has3Phase) {
+            (peakKVA * 1000.0) / (sqrt(3.0) * avg3PhaseV)
+        } else {
+            (peakKVA * 1000.0) / avg1PhaseV
+        }
 
         val avg = totalDailyWh / 24.0
         val lf = if (maxHourly > 0) (avg / maxHourly) * 100.0 else 0.0
@@ -287,7 +306,7 @@ object Calculations {
             deferrableLoadWh = deferrableLoadWh,
             byCategory = byCategory,
             byCriticality = byCriticality,
-            hourlyProfile = hourly
+            hourlyProfile = hourlyP
         )
     }
 }
