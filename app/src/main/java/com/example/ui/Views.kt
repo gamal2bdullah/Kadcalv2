@@ -349,7 +349,7 @@ fun HeroBanner(viewModel: SolarViewModel, summary: Calculations.Summary) {
                     modifier = Modifier.size(14.dp)
                 )
                 Text(
-                    text = "ITEL SOLAR engineering suite · $level Mode",
+                    text = "KADcal engineering suite · $level Mode",
                     color = CosmicOrange,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
@@ -1588,6 +1588,32 @@ fun SettingsView(
                         modifier = Modifier.fillMaxWidth().height(44.dp)
                     ) {
                         Text(text = label, color = Color.White, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = CosmicPanel),
+            border = BorderStroke(1.dp, CosmicBorder)
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(text = "About KADcal / حول التطبيق", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(text = "Learn more about the solar PV load design suite and operating company profile", color = CosmicMute, fontSize = 11.sp, modifier = Modifier.padding(bottom = 6.dp))
+
+                Button(
+                    onClick = {
+                        viewModel.navigateTo("about")
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = CosmicOrange),
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = Color.White)
+                        Text(text = "عرض نبذة ومعلومات التطبيق", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }

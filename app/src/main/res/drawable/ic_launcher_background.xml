@@ -18,7 +18,7 @@
                     android:color="#0A0E1A"
                     android:offset="0.0" />
                 <item
-                    android:color="#1F2A44"
+                    android:color="#2A1F4C"
                     android:offset="1.0" />
             </gradient>
         </aapt:attr>

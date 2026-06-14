@@ -196,6 +196,7 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                             Triple("library", "Appliance Library", Icons.Default.Star),
                             Triple("tests", "Calculations Test", Icons.Default.PlayArrow),
                             Triple("docs", "Specifications Info", Icons.Default.Build),
+                            Triple("about", "حول التطبيق", Icons.Default.Info),
                             Triple("settings", "Sizing Settings", Icons.Default.Settings)
                         ).forEach { (viewKey, label, icon) ->
                             val active = currentView == viewKey
@@ -244,6 +245,7 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                         "library" -> LibraryView(loads, viewModel)
                         "tests" -> TestsView(viewModel)
                         "docs" -> DocsView()
+                        "about" -> AboutView()
                         "settings" -> SettingsView(viewModel)
                         else -> DashboardView(loads, viewModel)
                     }
