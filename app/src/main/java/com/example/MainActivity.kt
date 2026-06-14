@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       MyApplicationTheme {
-        val viewModel: SolarViewModel = viewModel()
+        val viewModel: SolarViewModel = viewModel(factory = SolarViewModel.Factory)
         SolarAppLayout(viewModel = viewModel)
       }
     }

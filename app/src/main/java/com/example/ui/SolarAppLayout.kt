@@ -1,11 +1,9 @@
 package com.example.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,26 +16,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.domain.ApplianceLibrary
+import com.example.ui.navigation.SolarDestinations
+import com.example.ui.navigation.SolarNavHost
 import com.example.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SolarAppLayout(viewModel: SolarViewModel) {
-    val currentView by viewModel.currentView.collectAsState()
     val sidebarExpanded by viewModel.sidebarExpanded.collectAsState()
     val loads by viewModel.loadsList.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     val activeEditing by viewModel.activeEditingLoad.collectAsState()
     val isLibraryOpen by viewModel.isLibraryModalOpen.collectAsState()
+
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    
+    // Derived single source of truth for current active view route
+    val currentView = navBackStackEntry?.destination?.route ?: SolarDestinations.DASHBOARD
+
+    // Sync viewmodel's currentView state for backwards compatibility if needed
+    LaunchedEffect(currentView) {
+        viewModel.navigateTo(currentView)
+    }
 
     // Listen for custom globally routed toast events
     LaunchedEffect(Unit) {
@@ -71,7 +81,6 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.clickable {
-                                        // Quick inline project rename dialog trigger
                                         _globalToastChannel.tryEmit(Pair("Rename the project in Settings view!", "info"))
                                     }
                                 )
@@ -139,16 +148,24 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                         modifier = Modifier.navigationBarsPadding()
                     ) {
                         listOf(
-                            Triple("dashboard", "Dashboard", Icons.Default.Home),
-                            Triple("inventory", "Inventory", Icons.Default.List),
-                            Triple("schedule", "Schedule", Icons.Default.FavoriteBorder),
-                            Triple("phase", "Phases", Icons.Default.Send),
-                            Triple("settings", "Settings", Icons.Default.Settings)
+                            Triple(SolarDestinations.DASHBOARD, "Dashboard", Icons.Default.Home),
+                            Triple(SolarDestinations.INVENTORY, "Inventory", Icons.Default.List),
+                            Triple(SolarDestinations.SCHEDULE, "Schedule", Icons.Default.FavoriteBorder),
+                            Triple(SolarDestinations.PHASE, "Phases", Icons.Default.Send),
+                            Triple(SolarDestinations.SETTINGS, "Settings", Icons.Default.Settings)
                         ).forEach { (viewKey, label, icon) ->
                             val active = currentView == viewKey
                             NavigationBarItem(
                                 selected = active,
-                                onClick = { viewModel.navigateTo(viewKey) },
+                                onClick = { 
+                                    if (currentView != viewKey) {
+                                        navController.navigate(viewKey) {
+                                            popUpTo(SolarDestinations.DASHBOARD) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                },
                                 icon = { Icon(imageVector = icon, contentDescription = label, tint = if (active) CosmicOrange else CosmicMute) },
                                 label = { Text(text = label, color = if (active) Color.White else CosmicMute, fontSize = 9.sp) },
                                 colors = NavigationBarItemDefaults.colors(
@@ -185,26 +202,34 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                         )
 
                         listOf(
-                            Triple("dashboard", "Dashboard", Icons.Default.Home),
-                            Triple("inventory", "Inventory", Icons.Default.List),
-                            Triple("schedule", "Master Schedule", Icons.Default.ShoppingCart),
-                            Triple("analysis", "Sizing Engine", Icons.Default.Call),
-                            Triple("phase", "Phase Optimizer", Icons.Default.Send),
-                            Triple("validation", "Validation", Icons.Default.Check),
-                            Triple("assumptions", "Standard registry", Icons.Default.Lock),
-                            Triple("reports", "Sizing Report", Icons.Default.Email),
-                            Triple("library", "Appliance Library", Icons.Default.Star),
-                            Triple("tests", "Calculations Test", Icons.Default.PlayArrow),
-                            Triple("docs", "Specifications Info", Icons.Default.Build),
-                            Triple("about", "حول التطبيق", Icons.Default.Info),
-                            Triple("settings", "Sizing Settings", Icons.Default.Settings)
+                            Triple(SolarDestinations.DASHBOARD, "Dashboard", Icons.Default.Home),
+                            Triple(SolarDestinations.INVENTORY, "Inventory", Icons.Default.List),
+                            Triple(SolarDestinations.SCHEDULE, "Master Schedule", Icons.Default.ShoppingCart),
+                            Triple(SolarDestinations.ANALYSIS, "Sizing Engine", Icons.Default.Call),
+                            Triple(SolarDestinations.PHASE, "Phase Optimizer", Icons.Default.Send),
+                            Triple(SolarDestinations.VALIDATION, "Validation", Icons.Default.Check),
+                            Triple(SolarDestinations.ASSUMPTIONS, "Standard registry", Icons.Default.Lock),
+                            Triple(SolarDestinations.REPORTS, "Sizing Report", Icons.Default.Email),
+                            Triple(SolarDestinations.LIBRARY, "Appliance Library", Icons.Default.Star),
+                            Triple(SolarDestinations.TESTS, "Calculations Test", Icons.Default.PlayArrow),
+                            Triple(SolarDestinations.DOCS, "Specifications Info", Icons.Default.Build),
+                            Triple(SolarDestinations.ABOUT, "حول التطبيق", Icons.Default.Info),
+                            Triple(SolarDestinations.SETTINGS, "Sizing Settings", Icons.Default.Settings)
                         ).forEach { (viewKey, label, icon) ->
                             val active = currentView == viewKey
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .clickable { viewModel.navigateTo(viewKey) },
+                                    .clickable { 
+                                        if (currentView != viewKey) {
+                                            navController.navigate(viewKey) {
+                                                popUpTo(SolarDestinations.DASHBOARD) { saveState = true }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
+                                    },
                                 color = if (active) CosmicOrange.copy(alpha = 0.15f) else Color.Transparent,
                                 border = if (active) BorderStroke(1.dp, CosmicOrange) else null
                             ) {
@@ -231,24 +256,13 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                     }
                 }
 
-                // Primary content router container
+                // Primary content router container using NavHost
                 Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                    when (currentView) {
-                        "dashboard" -> DashboardView(loads, viewModel)
-                        "inventory" -> InventoryView(loads, viewModel)
-                        "schedule" -> ScheduleView(loads, viewModel)
-                        "analysis" -> AnalysisView(loads, viewModel)
-                        "phase" -> PhaseView(loads, viewModel)
-                        "validation" -> ValidationView(loads, viewModel)
-                        "assumptions" -> AssumptionsView(viewModel)
-                        "reports" -> ReportsView(loads, viewModel)
-                        "library" -> LibraryView(loads, viewModel)
-                        "tests" -> TestsView(viewModel)
-                        "docs" -> DocsView()
-                        "about" -> AboutView()
-                        "settings" -> SettingsView(viewModel)
-                        else -> DashboardView(loads, viewModel)
-                    }
+                    SolarNavHost(
+                        navController = navController,
+                        loads = loads,
+                        viewModel = viewModel
+                    )
                 }
             }
         }
