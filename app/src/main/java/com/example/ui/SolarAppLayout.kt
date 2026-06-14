@@ -1,0 +1,279 @@
+package com.example.ui
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.domain.ApplianceLibrary
+import com.example.ui.theme.*
+import kotlinx.coroutines.flow.collectLatest
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SolarAppLayout(viewModel: SolarViewModel) {
+    val currentView by viewModel.currentView.collectAsState()
+    val sidebarExpanded by viewModel.sidebarExpanded.collectAsState()
+    val loads by viewModel.loadsList.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val activeEditing by viewModel.activeEditingLoad.collectAsState()
+    val isLibraryOpen by viewModel.isLibraryModalOpen.collectAsState()
+
+    // Listen for custom globally routed toast events
+    LaunchedEffect(Unit) {
+        _globalToastChannel.collectLatest { (message, kind) ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val useSidebar = maxWidth >= 768.dp
+
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            containerColor = CosmicBg,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = viewModel.projectName.collectAsState().value,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.clickable {
+                                        // Quick inline project rename dialog trigger
+                                        _globalToastChannel.tryEmit(Pair("Rename the project in Settings view!", "info"))
+                                    }
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(CosmicGreen)
+                                        .size(6.dp)
+                                )
+                            }
+                            Text(
+                                text = "Compliance Solar calculator",
+                                fontSize = 10.sp,
+                                color = CosmicMute
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.toggleSidebar() }) {
+                            Icon(
+                                imageVector = if (sidebarExpanded) Icons.Default.Menu else Icons.AutoMirrored.Default.List,
+                                contentDescription = "Sidebar Toggle",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    actions = {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            listOf("Basic", "Pro" to "Professional", "Comm" to "Commercial", "Expert").forEach { opt ->
+                                val (label, value) = if (opt is Pair<*,*>) {
+                                    (opt.first as String) to (opt.second as String)
+                                } else {
+                                    (opt as String) to opt
+                                }
+                                val active = viewModel.expertLevel.collectAsState().value == value
+                                FilterChip(
+                                    selected = active,
+                                    onClick = { viewModel.updateExpertLevel(value) },
+                                    label = { Text(text = label, fontSize = 10.sp, color = if (active) Color.White else CosmicMute) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = CosmicOrange,
+                                        selectedLabelColor = Color.White,
+                                        containerColor = CosmicPanel
+                                    ),
+                                    border = FilterChipDefaults.filterChipBorder(enabled = true, selected = active, borderColor = CosmicBorder, selectedBorderColor = CosmicOrange)
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = CosmicPanel,
+                        titleContentColor = Color.White
+                    ),
+                    modifier = Modifier.statusBarsPadding()
+                )
+            },
+            bottomBar = {
+                if (!useSidebar) {
+                    NavigationBar(
+                        containerColor = CosmicPanel,
+                        tonalElevation = 8.dp,
+                        modifier = Modifier.navigationBarsPadding()
+                    ) {
+                        listOf(
+                            Triple("dashboard", "Dashboard", Icons.Default.Home),
+                            Triple("inventory", "Inventory", Icons.Default.List),
+                            Triple("schedule", "Schedule", Icons.Default.FavoriteBorder),
+                            Triple("phase", "Phases", Icons.Default.Send),
+                            Triple("settings", "Settings", Icons.Default.Settings)
+                        ).forEach { (viewKey, label, icon) ->
+                            val active = currentView == viewKey
+                            NavigationBarItem(
+                                selected = active,
+                                onClick = { viewModel.navigateTo(viewKey) },
+                                icon = { Icon(imageVector = icon, contentDescription = label, tint = if (active) CosmicOrange else CosmicMute) },
+                                label = { Text(text = label, color = if (active) Color.White else CosmicMute, fontSize = 9.sp) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    indicatorColor = CosmicOrange.copy(alpha = 0.2f)
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Expanded screen desktop sidebar layout
+                if (useSidebar && sidebarExpanded) {
+                    Column(
+                        modifier = Modifier
+                            .width(220.dp)
+                            .fillMaxHeight()
+                            .background(CosmicPanel)
+                            .border(BorderStroke(1.dp, CosmicBorder))
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "ENGINEERING MODULES",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = CosmicMute,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                        )
+
+                        listOf(
+                            Triple("dashboard", "Dashboard", Icons.Default.Home),
+                            Triple("inventory", "Inventory", Icons.Default.List),
+                            Triple("schedule", "Master Schedule", Icons.Default.ShoppingCart),
+                            Triple("analysis", "Sizing Engine", Icons.Default.Call),
+                            Triple("phase", "Phase Optimizer", Icons.Default.Send),
+                            Triple("validation", "Validation", Icons.Default.Check),
+                            Triple("assumptions", "Standard registry", Icons.Default.Lock),
+                            Triple("reports", "Sizing Report", Icons.Default.Email),
+                            Triple("library", "Appliance Library", Icons.Default.Star),
+                            Triple("tests", "Calculations Test", Icons.Default.PlayArrow),
+                            Triple("docs", "Specifications Info", Icons.Default.Build),
+                            Triple("settings", "Sizing Settings", Icons.Default.Settings)
+                        ).forEach { (viewKey, label, icon) ->
+                            val active = currentView == viewKey
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { viewModel.navigateTo(viewKey) },
+                                color = if (active) CosmicOrange.copy(alpha = 0.15f) else Color.Transparent,
+                                border = if (active) BorderStroke(1.dp, CosmicOrange) else null
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = label,
+                                        tint = if (active) CosmicOrange else CosmicMute,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = label,
+                                        color = if (active) Color.White else CosmicText,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Primary content router container
+                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                    when (currentView) {
+                        "dashboard" -> DashboardView(loads, viewModel)
+                        "inventory" -> InventoryView(loads, viewModel)
+                        "schedule" -> ScheduleView(loads, viewModel)
+                        "analysis" -> AnalysisView(loads, viewModel)
+                        "phase" -> PhaseView(loads, viewModel)
+                        "validation" -> ValidationView(loads, viewModel)
+                        "assumptions" -> AssumptionsView(viewModel)
+                        "reports" -> ReportsView(loads, viewModel)
+                        "library" -> LibraryView(loads, viewModel)
+                        "tests" -> TestsView(viewModel)
+                        "docs" -> DocsView()
+                        "settings" -> SettingsView(viewModel)
+                        else -> DashboardView(loads, viewModel)
+                    }
+                }
+            }
+        }
+
+        // Overlay Interactive Dialog Modals
+        activeEditing?.let { editing ->
+            EditLoadModal(
+                initialLoad = editing,
+                onDismiss = { viewModel.activeEditingLoad.value = null },
+                onSave = { saved ->
+                    viewModel.updateLoad(saved)
+                    viewModel.activeEditingLoad.value = null
+                    _globalToastChannel.tryEmit(Pair("Specifications saved successfully!", "ok"))
+                }
+            )
+        }
+
+        if (isLibraryOpen) {
+            LibraryImportModal(
+                onDismiss = { viewModel.isLibraryModalOpen.value = false },
+                onSelect = { selectedTempl ->
+                    viewModel.isLibraryModalOpen.value = false
+                    val index = loads.size + 1
+                    val loadEntity = ApplianceLibrary.createLoadFromTemplate(selectedTempl, index)
+                    viewModel.activeEditingLoad.value = loadEntity
+                }
+            )
+        }
+    }
+}

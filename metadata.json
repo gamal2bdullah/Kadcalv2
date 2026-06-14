@@ -1,0 +1,6 @@
+{
+  "name": "ITEL SOLAR",
+  "description": "Advanced engineering-grade solar PV system load analysis and optimizer",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
