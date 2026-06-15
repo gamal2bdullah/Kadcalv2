@@ -9,8 +9,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -345,20 +351,73 @@ fun FormInput(label: String, value: String, onValueChange: (String) -> Unit, mod
 }
 
 @Composable
-fun FormInputNum(label: String, value: Double, onValueChange: (Double) -> Unit, modifier: Modifier = Modifier) {
-    var textValue by remember(value) { mutableStateOf(if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()) }
+fun FormInputNum(
+    label: String,
+    value: Double,
+    onValueChange: (Double) -> Unit,
+    modifier: Modifier = Modifier,
+    imeAction: ImeAction = ImeAction.Next,
+    onNext: (() -> Unit)? = null,
+    onPrevious: (() -> Unit)? = null,
+) {
+    val focusManager = LocalFocusManager.current
+    var textValue by remember { mutableStateOf(if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()) }
+    var hasError by remember { mutableStateOf(false) }
+
+    LaunchedEffect(value) {
+        if (textValue.toDoubleOrNull() != value) {
+            textValue = if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
+        }
+    }
 
     Column(modifier = modifier) {
         Text(text = label, color = CosmicMute, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 4.dp))
         OutlinedTextField(
             value = textValue,
-            onValueChange = {
-                textValue = it
-                it.toDoubleOrNull()?.let { d -> onValueChange(d) }
+            onValueChange = { newText ->
+                textValue = newText
+                newText.toDoubleOrNull()?.let { d ->
+                    hasError = false
+                    onValueChange(d)
+                } ?: run { hasError = true }
             },
+            isError = hasError,
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = imeAction
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = {
+                    if (onNext != null) onNext() else focusManager.moveFocus(FocusDirection.Down)
+                },
+                onPrevious = {
+                    if (onPrevious != null) onPrevious() else focusManager.moveFocus(FocusDirection.Up)
+                },
+                onDone = {
+                    focusManager.clearFocus()
+                }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .onKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown) {
+                        when (event.key) {
+                            Key.Tab -> {
+                                if (event.isShiftPressed) {
+                                    if (onPrevious != null) onPrevious() else focusManager.moveFocus(FocusDirection.Up)
+                                } else {
+                                    if (onNext != null) onNext() else focusManager.moveFocus(FocusDirection.Down)
+                                }
+                                true
+                            }
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
+                },
             textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, color = Color.White, fontFamily = FontFamily.Monospace),
             shape = RoundedCornerShape(6.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -395,7 +454,12 @@ fun FormDropdown(label: String, value: String, options: List<String>, onSelectio
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = value, color = Color.White, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = "▼", color = CosmicMute, fontSize = 8.sp)
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = CosmicMute,
+                    modifier = Modifier.size(18.dp)
+                )
             }
             DropdownMenu(
                 expanded = expanded,

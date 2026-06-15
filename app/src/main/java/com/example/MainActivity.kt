@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.SolarAppLayout
 import com.example.ui.viewmodel.SharedViewModel
@@ -14,8 +16,9 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      MyApplicationTheme {
-        val sharedViewModel: SharedViewModel = viewModel(factory = SharedViewModel.Factory)
+      val sharedViewModel: SharedViewModel = viewModel(factory = SharedViewModel.Factory)
+      val isHighContrast by sharedViewModel.highContrast.collectAsState()
+      MyApplicationTheme(highContrast = isHighContrast) {
         SolarAppLayout(sharedViewModel = sharedViewModel)
       }
     }

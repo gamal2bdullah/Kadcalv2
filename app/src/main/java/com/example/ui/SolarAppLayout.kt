@@ -144,10 +144,10 @@ fun SolarAppLayout(sharedViewModel: SharedViewModel) {
                         modifier = Modifier.navigationBarsPadding()
                     ) {
                         listOf(
-                            Triple(SolarDestinations.DASHBOARD, "Dashboard", Icons.Default.Home),
-                            Triple(SolarDestinations.INVENTORY, "Inventory", Icons.Default.List),
-                            Triple(SolarDestinations.SCHEDULE, "Schedule", Icons.Default.FavoriteBorder),
-                            Triple(SolarDestinations.PHASE, "Phases", Icons.Default.Send),
+                            Triple(SolarDestinations.DASHBOARD, "Dashboard", Icons.Default.Dashboard),
+                            Triple(SolarDestinations.INVENTORY, "Inventory", Icons.Default.FormatListBulleted),
+                            Triple(SolarDestinations.SCHEDULE, "Schedule", Icons.Default.TableChart),
+                            Triple(SolarDestinations.PHASE, "Phases", Icons.Default.ElectricBolt),
                             Triple(SolarDestinations.SETTINGS, "Settings", Icons.Default.Settings)
                         ).forEach { (viewKey, label, icon) ->
                             val active = currentView == viewKey
@@ -198,17 +198,17 @@ fun SolarAppLayout(sharedViewModel: SharedViewModel) {
                         )
 
                         listOf(
-                            Triple(SolarDestinations.DASHBOARD, "Dashboard", Icons.Default.Home),
-                            Triple(SolarDestinations.INVENTORY, "Inventory", Icons.Default.List),
-                            Triple(SolarDestinations.SCHEDULE, "Master Schedule", Icons.Default.ShoppingCart),
-                            Triple(SolarDestinations.ANALYSIS, "Sizing Engine", Icons.Default.Call),
-                            Triple(SolarDestinations.PHASE, "Phase Optimizer", Icons.Default.Send),
-                            Triple(SolarDestinations.VALIDATION, "Validation", Icons.Default.Check),
-                            Triple(SolarDestinations.ASSUMPTIONS, "Standard registry", Icons.Default.Lock),
-                            Triple(SolarDestinations.REPORTS, "Sizing Report", Icons.Default.Email),
-                            Triple(SolarDestinations.LIBRARY, "Appliance Library", Icons.Default.Star),
-                            Triple(SolarDestinations.TESTS, "Calculations Test", Icons.Default.PlayArrow),
-                            Triple(SolarDestinations.DOCS, "Specifications Info", Icons.Default.Build),
+                            Triple(SolarDestinations.DASHBOARD, "Dashboard", Icons.Default.Dashboard),
+                            Triple(SolarDestinations.INVENTORY, "Inventory", Icons.Default.FormatListBulleted),
+                            Triple(SolarDestinations.SCHEDULE, "Master Schedule", Icons.Default.TableChart),
+                            Triple(SolarDestinations.ANALYSIS, "Sizing Engine", Icons.Default.ElectricBolt),
+                            Triple(SolarDestinations.PHASE, "Phase Optimizer", Icons.Default.CompareArrows),
+                            Triple(SolarDestinations.VALIDATION, "Validation", Icons.Default.FactCheck),
+                            Triple(SolarDestinations.ASSUMPTIONS, "Standard registry", Icons.Default.MenuBook),
+                            Triple(SolarDestinations.REPORTS, "Sizing Report", Icons.Default.Description),
+                            Triple(SolarDestinations.LIBRARY, "Appliance Library", Icons.Default.FolderSpecial),
+                            Triple(SolarDestinations.TESTS, "Calculations Test", Icons.Default.Science),
+                            Triple(SolarDestinations.DOCS, "Specifications Info", Icons.Default.HelpCenter),
                             Triple(SolarDestinations.ABOUT, "حول التطبيق", Icons.Default.Info),
                             Triple(SolarDestinations.SETTINGS, "Sizing Settings", Icons.Default.Settings)
                         ).forEach { (viewKey, label, icon) ->
@@ -286,6 +286,11 @@ fun SolarAppLayout(sharedViewModel: SharedViewModel) {
                     sharedViewModel.activeEditingLoad.value = loadEntity
                 }
             )
+        }
+
+        val onboardingShown by sharedViewModel.onboardingShown.collectAsState()
+        if (!onboardingShown) {
+            OnboardingScreen(onDismiss = { sharedViewModel.dismissOnboarding() })
         }
     }
 }

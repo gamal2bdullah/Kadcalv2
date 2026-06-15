@@ -51,19 +51,30 @@ fun DashboardScreen(
     ) {
         when (val state = summaryState) {
             is com.example.core.result.UiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = CosmicOrange)
-                }
+                com.example.ui.ShimmerDashboard()
             }
             is com.example.core.result.UiState.Empty -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "No loads registered yet. Head to Inventory to add loads.", color = CosmicMute, fontSize = 14.sp)
-                }
+                com.example.ui.EmptyState(
+                    icon = Icons.Default.Info,
+                    title = "No Electrical Loads Configured",
+                    description = "Add electrical load profiles under your Inventory list to generate professional diurnal solar curves and diagnostic assessments.",
+                    actionLabel = "Add Custom Load",
+                    onAction = {
+                        sharedViewModel.activeEditingLoad.value = com.example.domain.ApplianceLibrary.createLoadFromTemplate(
+                            com.example.domain.ApplianceLibrary.APPLIANCE_LIBRARY[0],
+                            loads.size + 1
+                        )
+                    }
+                )
             }
             is com.example.core.result.UiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "Calculation Error: ${state.error.message}", color = CosmicRed, fontSize = 14.sp)
-                }
+                com.example.ui.ErrorState(
+                    error = state.error.message,
+                    onRetry = {
+                        // Simply touching project triggers cascade state refresh
+                        sharedViewModel.updateProjectName(sharedViewModel.projectName.value)
+                    }
+                )
             }
             is com.example.core.result.UiState.Success -> {
                 val summary = state.data

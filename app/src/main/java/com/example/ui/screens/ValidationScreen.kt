@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
@@ -105,7 +106,19 @@ fun ValidationCategoryCard(
                         Column {
                             Text(text = "${issue.loadName}: ${issue.message}", color = CosmicText, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                             if (issue.fixSuggestion.isNotEmpty()) {
-                                Text(text = "➜ Fix suggestion: ${issue.fixSuggestion}", color = CosmicGreenLight, fontSize = 10.sp)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(top = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Build,
+                                        contentDescription = null,
+                                        tint = CosmicGreenLight,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Text(text = "Fix recommendation: ${issue.fixSuggestion}", color = CosmicGreenLight, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                                }
                             }
                         }
                     }

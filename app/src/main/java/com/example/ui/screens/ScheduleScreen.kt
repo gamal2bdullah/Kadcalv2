@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -79,70 +80,79 @@ fun ScheduleScreen(
             }
         }
 
-        // Spreadsheet display with horizontal & vertical scroll
-        Card(
-            modifier = Modifier.weight(1f),
-            colors = CardDefaults.cardColors(containerColor = CosmicPanel),
-            border = BorderStroke(1.dp, CosmicBorder)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .horizontalScroll(scrollHoriz)
-                    .verticalScroll(scrollVert)
+        if (loads.isEmpty()) {
+            com.example.ui.EmptyState(
+                icon = Icons.Default.Info,
+                title = "No Engineering Schedule Available",
+                description = "The tabular schedule data matrix populates automatically once load requirements are added to your local database.",
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            // Spreadsheet display with horizontal & vertical scroll
+            Card(
+                modifier = Modifier.weight(1f),
+                colors = CardDefaults.cardColors(containerColor = CosmicPanel),
+                border = BorderStroke(1.dp, CosmicBorder)
             ) {
-                Column {
-                    // Header Row
-                    Row(
-                        modifier = Modifier
-                            .background(CosmicPanel2)
-                            .padding(bottom = 1.dp)
-                            .height(44.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        listOf(
-                            "ID" to 80, "Tag/Ref" to 120, "Load Name" to 180, "Category" to 110,
-                            "Qty" to 60, "Rated (W)" to 90, "Run (W)" to 90, "PF" to 60,
-                            "Ku" to 60, "Connected (W)" to 115, "Daily (Wh)" to 115,
-                            "Annual (kWh)" to 115
-                        ).forEach { (lbl, width) ->
-                            Text(
-                                text = lbl,
-                                color = CosmicOrange,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .width(width.dp)
-                                    .padding(8.dp),
-                                textAlign = if (lbl == "ID" || lbl == "Tag/Ref" || lbl == "Load Name") TextAlign.Start else TextAlign.End
-                            )
-                        }
-                    }
-
-                    // Data Rows
-                    loads.forEach { l ->
-                        val conn = Calculations.calcConnectedLoad(l)
-                        val daily = Calculations.calcDailyEnergy(l)
-                        val annual = Calculations.calcAnnualEnergy(l)
-
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .horizontalScroll(scrollHoriz)
+                        .verticalScroll(scrollVert)
+                ) {
+                    Column {
+                        // Header Row
                         Row(
                             modifier = Modifier
-                                .height(40.dp)
-                                .border(BorderStroke(1.dp, CosmicBorder.copy(alpha = 0.5f))),
+                                .background(CosmicPanel2)
+                                .padding(bottom = 1.dp)
+                                .height(44.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            CellStr(l.loadId, 80)
-                            CellStr(l.loadTag, 120, CosmicAmber)
-                            CellStr(l.loadName, 180, Color.White, maxLines = 1)
-                            CellStr(l.categoryMain, 110)
-                            CellNum(l.quantity.toDouble(), 60, decimals = 0)
-                            CellNum(l.ratedPowerW, 90)
-                            CellNum(l.runningPowerW, 90)
-                            CellNum(l.powerFactor, 60, decimals = 2)
-                            CellNum(l.utilizationFactorKu, 60, decimals = 2)
-                            CellNum(conn, 115, isBold = true, textColor = CosmicOrange)
-                            CellNum(daily, 115, isBold = true, textColor = CosmicAmber)
-                            CellNum(annual / 1000.0, 115, decimals = 1, textColor = CosmicGreenLight)
+                            listOf(
+                                "ID" to 80, "Tag/Ref" to 120, "Load Name" to 180, "Category" to 110,
+                                "Qty" to 60, "Rated (W)" to 90, "Run (W)" to 90, "PF" to 60,
+                                "Ku" to 60, "Connected (W)" to 115, "Daily (Wh)" to 115,
+                                "Annual (kWh)" to 115
+                            ).forEach { (lbl, width) ->
+                                Text(
+                                    text = lbl,
+                                    color = CosmicOrange,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .width(width.dp)
+                                        .padding(8.dp),
+                                    textAlign = if (lbl == "ID" || lbl == "Tag/Ref" || lbl == "Load Name") TextAlign.Start else TextAlign.End
+                                )
+                            }
+                        }
+
+                        // Data Rows
+                        loads.forEach { l ->
+                            val conn = Calculations.calcConnectedLoad(l)
+                            val daily = Calculations.calcDailyEnergy(l)
+                            val annual = Calculations.calcAnnualEnergy(l)
+
+                            Row(
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .border(BorderStroke(1.dp, CosmicBorder.copy(alpha = 0.5f))),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CellStr(l.loadId, 80)
+                                CellStr(l.loadTag, 120, CosmicAmber)
+                                CellStr(l.loadName, 180, Color.White, maxLines = 1)
+                                CellStr(l.categoryMain, 110)
+                                CellNum(l.quantity.toDouble(), 60, decimals = 0)
+                                CellNum(l.ratedPowerW, 90)
+                                CellNum(l.runningPowerW, 90)
+                                CellNum(l.powerFactor, 60, decimals = 2)
+                                CellNum(l.utilizationFactorKu, 60, decimals = 2)
+                                CellNum(conn, 115, isBold = true, textColor = CosmicOrange)
+                                CellNum(daily, 115, isBold = true, textColor = CosmicAmber)
+                                CellNum(annual / 1000.0, 115, decimals = 1, textColor = CosmicGreenLight)
+                            }
                         }
                     }
                 }

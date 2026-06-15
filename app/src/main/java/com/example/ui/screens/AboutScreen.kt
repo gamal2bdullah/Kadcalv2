@@ -220,28 +220,39 @@ fun AboutScreen() {
                 )
 
                 advantages.forEach { (title, desc) ->
-                    Column(
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Text(
-                            text = "✦ $title",
-                            color = CosmicGreenLight,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Right,
-                            modifier = Modifier.fillMaxWidth()
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = CosmicGreenLight,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .padding(top = 2.dp)
                         )
-                        Text(
-                            text = desc,
-                            color = CosmicText,
-                            fontSize = 12.sp,
-                            lineHeight = 18.sp,
-                            textAlign = TextAlign.Right,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Column {
+                            Text(
+                                text = title,
+                                color = CosmicGreenLight,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                textAlign = TextAlign.Right,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Text(
+                                text = desc,
+                                color = CosmicText,
+                                fontSize = 12.sp,
+                                lineHeight = 18.sp,
+                                textAlign = TextAlign.Right,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }

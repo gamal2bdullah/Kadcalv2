@@ -95,6 +95,110 @@ fun SettingsScreen(
             }
         }
 
+        val isHighContrast by sharedViewModel.highContrast.collectAsState()
+        val appLang by sharedViewModel.appLanguage.collectAsState()
+        val fontSizeAdj by sharedViewModel.fontSizeAdjustment.collectAsState()
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = CosmicPanel),
+            border = BorderStroke(1.dp, CosmicBorder)
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(text = "Accessibility & View Setup", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                
+                // High Contrast Mode Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "High Contrast Mode", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                        Text(text = "Boost visual contrast bounds for outdoor solar setups", color = CosmicMute, fontSize = 10.sp)
+                    }
+                    Switch(
+                        checked = isHighContrast,
+                        onCheckedChange = { 
+                            sharedViewModel.updateHighContrast(it)
+                            _globalToastChannel.tryEmit(Pair(if (it) "High contrast activated" else "Standard color specs loaded", "ok"))
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = CosmicOrange, checkedTrackColor = CosmicOrange.copy(alpha = 0.4f))
+                    )
+                }
+                
+                HorizontalDivider(color = CosmicBorder, thickness = 0.5.dp)
+
+                // Language Select Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "App Language / لغة التطبيق", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                        Text(text = "Arabic (العربية) or English templates", color = CosmicMute, fontSize = 10.sp)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        listOf("ar" to "العربية", "en" to "English").forEach { (code, label) ->
+                            val active = appLang == code
+                            FilterChip(
+                                selected = active,
+                                onClick = { 
+                                    sharedViewModel.updateAppLanguage(code)
+                                    _globalToastChannel.tryEmit(Pair("Language configured: $label", "ok"))
+                                },
+                                label = { Text(text = label, fontSize = 10.sp, color = if (active) Color.White else CosmicMute) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CosmicOrange)
+                            )
+                        }
+                    }
+                }
+                
+                HorizontalDivider(color = CosmicBorder, thickness = 0.5.dp)
+
+                // Font Size Adjustment
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "Text Scaling Size", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                        Text(text = "Configure legible content density", color = CosmicMute, fontSize = 10.sp)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        listOf("Compact", "Normal", "Large").forEach { sizeOpt ->
+                            val active = fontSizeAdj == sizeOpt
+                            FilterChip(
+                                selected = active,
+                                onClick = { 
+                                    sharedViewModel.updateFontSizeAdjustment(sizeOpt)
+                                    _globalToastChannel.tryEmit(Pair("Text size set to $sizeOpt", "ok"))
+                                },
+                                label = { Text(text = sizeOpt, fontSize = 10.sp, color = if (active) Color.White else CosmicMute) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CosmicOrange)
+                            )
+                        }
+                    }
+                }
+                
+                HorizontalDivider(color = CosmicBorder, thickness = 0.5.dp)
+
+                // Reset Onboarding Flow Trigger
+                Button(
+                    onClick = {
+                        sharedViewModel.resetOnboarding()
+                        _globalToastChannel.tryEmit(Pair("Onboarding sequence will launch on next start!", "info"))
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = CosmicPanel2),
+                    border = BorderStroke(1.dp, CosmicBorder),
+                    modifier = Modifier.fillMaxWidth().height(36.dp)
+                ) {
+                    Text(text = "Relaunch Welcome Onboarding Guide", color = Color.White, fontSize = 11.sp)
+                }
+            }
+        }
+
         Card(
             colors = CardDefaults.cardColors(containerColor = CosmicPanel),
             border = BorderStroke(1.dp, CosmicBorder)

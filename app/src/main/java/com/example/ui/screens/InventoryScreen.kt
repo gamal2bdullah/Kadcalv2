@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -138,22 +139,29 @@ fun InventoryScreen(
             matchS && matchC
         }
 
-        if (filteredLoads.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(BorderStroke(1.dp, CosmicBorder))
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = CosmicBorder, modifier = Modifier.size(48.dp))
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(text = "No matching loads found", color = CosmicMute, fontSize = 14.sp)
-                }
-            }
+        if (loads.isEmpty()) {
+            com.example.ui.EmptyState(
+                icon = Icons.Default.Info,
+                title = "Your Electrical Inventory is Empty",
+                description = "Sizing engines require active electrical load specifications. Start by importing a template of typical residential or commercial loads or map your custom specs.",
+                actionLabel = "Add First Load Spec",
+                onAction = {
+                    sharedViewModel.activeEditingLoad.value = ApplianceLibrary.createLoadFromTemplate(ApplianceLibrary.APPLIANCE_LIBRARY[0], 1)
+                },
+                modifier = Modifier.weight(1f)
+            )
+        } else if (filteredLoads.isEmpty()) {
+            com.example.ui.EmptyState(
+                icon = Icons.Default.Search,
+                title = "No Matching Loads Located",
+                description = "No load entities with name or segment tag matched standard queries for search: \"$search\".",
+                actionLabel = "Clear Search Parameters",
+                onAction = {
+                    inventoryViewModel.onEvent(InventoryEvent.SetSearchQuery(""))
+                    inventoryViewModel.onEvent(InventoryEvent.SetCategoryFilter("All"))
+                },
+                modifier = Modifier.weight(1f)
+            )
         } else {
             Column(
                 modifier = Modifier

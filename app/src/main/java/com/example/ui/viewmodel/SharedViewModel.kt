@@ -41,9 +41,26 @@ class SharedViewModel(
     private val _expertLevel = MutableStateFlow(sharedPrefs.getString("expert_level", "Professional") ?: "Professional")
     val expertLevel: StateFlow<String> = _expertLevel.asStateFlow()
 
+    private val _highContrast = MutableStateFlow(sharedPrefs.getBoolean("high_contrast_v3", false))
+    val highContrast: StateFlow<Boolean> = _highContrast.asStateFlow()
+
+    private val _appLanguage = MutableStateFlow(sharedPrefs.getString("app_language_v3", "ar") ?: "ar")
+    val appLanguage: StateFlow<String> = _appLanguage.asStateFlow()
+
+    private val _fontSizeAdjustment = MutableStateFlow(sharedPrefs.getString("font_size_v3", "Normal") ?: "Normal")
+    val fontSizeAdjustment: StateFlow<String> = _fontSizeAdjustment.asStateFlow()
+
     // Overlay modal states
     val activeEditingLoad = MutableStateFlow<LoadEntity?>(null)
     val isLibraryModalOpen = MutableStateFlow(false)
+
+    private val _onboardingShown = MutableStateFlow(sharedPrefs.getBoolean("onboarding_shown_v3", false))
+    val onboardingShown: StateFlow<Boolean> = _onboardingShown.asStateFlow()
+
+    fun dismissOnboarding() {
+        _onboardingShown.value = true
+        sharedPrefs.edit().putBoolean("onboarding_shown_v3", true).apply()
+    }
 
     init {
         SolarLogger.i(tag, "SharedViewModel initialized. Subscribed to database stream.")
@@ -69,6 +86,26 @@ class SharedViewModel(
     fun updateProjectName(name: String) {
         _projectName.value = name
         sharedPrefs.edit().putString("project_name", name).apply()
+    }
+
+    fun updateHighContrast(enabled: Boolean) {
+        _highContrast.value = enabled
+        sharedPrefs.edit().putBoolean("high_contrast_v3", enabled).apply()
+    }
+
+    fun updateAppLanguage(lang: String) {
+        _appLanguage.value = lang
+        sharedPrefs.edit().putString("app_language_v3", lang).apply()
+    }
+
+    fun updateFontSizeAdjustment(size: String) {
+        _fontSizeAdjustment.value = size
+        sharedPrefs.edit().putString("font_size_v3", size).apply()
+    }
+
+    fun resetOnboarding() {
+        _onboardingShown.value = false
+        sharedPrefs.edit().putBoolean("onboarding_shown_v3", false).apply()
     }
 
     fun updateExpertLevel(level: String) {

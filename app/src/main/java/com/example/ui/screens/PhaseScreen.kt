@@ -9,7 +9,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.annotation.Keep
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,7 +117,19 @@ fun PhaseScreen(
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(text = "Vector Recommendations", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     result.recommendations.forEach { r ->
-                        Text(text = "▸ $r", color = CosmicMute, fontSize = 11.sp, lineHeight = 15.sp)
+                        Row(
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Bolt,
+                                contentDescription = null,
+                                tint = CosmicAmber,
+                                modifier = Modifier.size(16.dp).padding(top = 1.dp)
+                            )
+                            Text(text = r, color = CosmicMute, fontSize = 11.sp, lineHeight = 15.sp)
+                        }
                     }
                 }
             }
