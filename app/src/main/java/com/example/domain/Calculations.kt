@@ -240,20 +240,50 @@ object Calculations {
         val diversified = loads.sumOf { calcDiversifiedLoad(it) }
 
         val totalDailyWh = hourlyP.sum()
-        // Day hours slice (8-18 index is index 8 to 17) -> index 8 to 17 in Kotlin is (8 until 18)
-        val dayE = hourlyP.slice(8 until 18).sum()
-        val nightE = totalDailyWh - dayE
+        // Precise daily day and night energy summed per load from actual operating hours
+        val dayE = loads.sumOf {
+            val summerDay = calcDayEnergy(it, "summer")
+            val winterDay = calcDayEnergy(it, "winter")
+            (summerDay * 183.0 + winterDay * 182.0) / 365.0
+        }
+        val nightE = loads.sumOf {
+            val summerNight = calcNightEnergy(it, "summer")
+            val winterNight = calcNightEnergy(it, "winter")
+            (summerNight * 183.0 + winterNight * 182.0) / 365.0
+        }
 
         val maxSurge = loads.sumOf { calcSurgePower(it) }
         val peakKW = maxHourly / 1000.0
         val peakKVA = maxHourlyS / 1000.0
+        
+        // Correct per-phase current calculations based on phase allocations and real per-load voltages
+        val balancer = PhaseBalancer.balancePhases(loads)
+        var l1Amps = 0.0
+        var l2Amps = 0.0
+        var l3Amps = 0.0
+        
+        balancer.allocations.forEach { alloc ->
+            val l = loads.find { it.id == alloc.loadId }
+            if (l != null) {
+                val current = calcFullLoadCurrent(l)
+                when (alloc.phase) {
+                    "L1" -> l1Amps += current
+                    "L2" -> l2Amps += current
+                    "L3" -> l3Amps += current
+                    "3Ø" -> {
+                        l1Amps += current
+                        l2Amps += current
+                        l3Amps += current
+                    }
+                }
+            }
+        }
+        
         val has3Phase = loads.any { it.phaseType == "3Ø" }
-        val avg3PhaseV = loads.filter { it.phaseType == "3Ø" }.map { it.voltageNominal.toDouble() }.average().let { if (it.isNaN() || it <= 0.0) 380.0 else it }
-        val avg1PhaseV = loads.filter { it.phaseType != "3Ø" }.map { it.voltageNominal.toDouble() }.average().let { if (it.isNaN() || it <= 0.0) 220.0 else it }
         val estMaxCurrent = if (has3Phase) {
-            (peakKVA * 1000.0) / (sqrt(3.0) * avg3PhaseV)
+            maxOf(l1Amps, l2Amps, l3Amps)
         } else {
-            (peakKVA * 1000.0) / avg1PhaseV
+            loads.sumOf { calcFullLoadCurrent(it) }
         }
 
         val avg = totalDailyWh / 24.0
@@ -295,7 +325,7 @@ object Calculations {
             dayEnergyWh = dayE,
             nightEnergyWh = nightE,
             monthlyEnergyKWh = (totalDailyWh * 30.0) / 1000.0,
-            annualEnergyKWh = (totalDailyWh * 365.0) / 1000.0,
+            annualEnergyKWh = loads.sumOf { calcAnnualEnergy(it) } / 1000.0,
             peakDemandKW = peakKW,
             peakDemandKVA = peakKVA,
             estimatedMaxCurrentA = estMaxCurrent,

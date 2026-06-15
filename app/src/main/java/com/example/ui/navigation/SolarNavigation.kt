@@ -2,12 +2,13 @@ package com.example.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.data.LoadEntity
-import com.example.ui.*
 import com.example.ui.screens.*
+import com.example.ui.viewmodel.*
 
 object SolarDestinations {
     const val DASHBOARD = "dashboard"
@@ -29,7 +30,7 @@ object SolarDestinations {
 fun SolarNavHost(
     navController: NavHostController,
     loads: List<LoadEntity>,
-    viewModel: SolarViewModel,
+    sharedViewModel: SharedViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -38,34 +39,46 @@ fun SolarNavHost(
         modifier = modifier
     ) {
         composable(SolarDestinations.DASHBOARD) {
-            DashboardScreen(loads = loads, viewModel = viewModel)
+            val dashboardViewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory)
+            DashboardScreen(loads = loads, dashboardViewModel = dashboardViewModel, sharedViewModel = sharedViewModel)
         }
         composable(SolarDestinations.INVENTORY) {
-            InventoryScreen(loads = loads, viewModel = viewModel)
+            val inventoryViewModel: InventoryViewModel = viewModel(factory = InventoryViewModel.Factory)
+            InventoryScreen(loads = loads, inventoryViewModel = inventoryViewModel, sharedViewModel = sharedViewModel)
         }
         composable(SolarDestinations.SCHEDULE) {
-            ScheduleScreen(loads = loads, viewModel = viewModel)
+            val scheduleViewModel: ScheduleViewModel = viewModel(factory = ScheduleViewModel.Factory)
+            ScheduleScreen(loads = loads, scheduleViewModel = scheduleViewModel)
         }
         composable(SolarDestinations.ANALYSIS) {
-            AnalysisScreen(loads = loads, viewModel = viewModel)
+            val analysisViewModel: AnalysisViewModel = viewModel(factory = AnalysisViewModel.Factory)
+            val dashboardViewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory)
+            AnalysisScreen(loads = loads, analysisViewModel = analysisViewModel, dashboardViewModel = dashboardViewModel)
         }
         composable(SolarDestinations.PHASE) {
-            PhaseScreen(loads = loads, viewModel = viewModel)
+            val phaseViewModel: PhaseViewModel = viewModel(factory = PhaseViewModel.Factory)
+            PhaseScreen(loads = loads, phaseViewModel = phaseViewModel)
         }
         composable(SolarDestinations.VALIDATION) {
-            ValidationScreen(loads = loads, viewModel = viewModel)
+            val validationViewModel: ValidationViewModel = viewModel(factory = ValidationViewModel.Factory)
+            ValidationScreen(validationViewModel = validationViewModel)
         }
         composable(SolarDestinations.ASSUMPTIONS) {
-            AssumptionsScreen(viewModel = viewModel)
+            val assumptionsViewModel: AssumptionsViewModel = viewModel(factory = AssumptionsViewModel.Factory)
+            AssumptionsScreen(assumptionsViewModel = assumptionsViewModel)
         }
         composable(SolarDestinations.REPORTS) {
-            ReportsScreen(loads = loads, viewModel = viewModel)
+            val reportsViewModel: ReportsViewModel = viewModel(factory = ReportsViewModel.Factory)
+            val dashboardViewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory)
+            ReportsScreen(loads = loads, reportsViewModel = reportsViewModel, dashboardViewModel = dashboardViewModel, sharedViewModel = sharedViewModel)
         }
         composable(SolarDestinations.LIBRARY) {
-            LibraryScreen(loads = loads, viewModel = viewModel)
+            val libraryViewModel: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory)
+            LibraryScreen(loads = loads, libraryViewModel = libraryViewModel, sharedViewModel = sharedViewModel)
         }
         composable(SolarDestinations.TESTS) {
-            TestsScreen(viewModel = viewModel)
+            val testsViewModel: TestsViewModel = viewModel(factory = TestsViewModel.Factory)
+            TestsScreen(testsViewModel = testsViewModel)
         }
         composable(SolarDestinations.DOCS) {
             DocsScreen()
@@ -74,7 +87,7 @@ fun SolarNavHost(
             AboutScreen()
         }
         composable(SolarDestinations.SETTINGS) {
-            SettingsScreen(viewModel = viewModel)
+            SettingsScreen(sharedViewModel = sharedViewModel)
         }
     }
 }

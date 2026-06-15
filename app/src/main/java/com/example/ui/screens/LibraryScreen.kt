@@ -16,16 +16,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.LoadEntity
 import com.example.domain.ApplianceLibrary
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.LibraryViewModel
+import com.example.ui.viewmodel.LibraryEvent
+import com.example.ui.viewmodel.SharedViewModel
 import com.example.ui._globalToastChannel
 import com.example.ui.theme.*
 
 @Composable
 fun LibraryScreen(
     loads: List<LoadEntity>,
-    viewModel: SolarViewModel
+    libraryViewModel: LibraryViewModel,
+    sharedViewModel: SharedViewModel
 ) {
-    val search by viewModel.searchLibrary.collectAsState()
+    val uiState by libraryViewModel.uiState.collectAsState()
+    val search = uiState.searchQuery
     val scrollState = rememberScrollState()
     
     val filtered = ApplianceLibrary.APPLIANCE_LIBRARY.filter { t ->
@@ -42,7 +46,7 @@ fun LibraryScreen(
 
         OutlinedTextField(
             value = search,
-            onValueChange = { viewModel.searchLibrary.value = it },
+            onValueChange = { libraryViewModel.onEvent(LibraryEvent.SetSearchQuery(it)) },
             placeholder = { Text("Search from 50+ typical appliances templates…", color = CosmicMute, fontSize = 12.sp) },
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = CosmicMute) },
             singleLine = true,
@@ -80,7 +84,7 @@ fun LibraryScreen(
                             onClick = {
                                 val index = loads.size + 1
                                 val entity = ApplianceLibrary.createLoadFromTemplate(t, index)
-                                viewModel.addLoad(entity)
+                                sharedViewModel.addLoad(entity)
                                 _globalToastChannel.tryEmit(Pair("Imported standard '${t.name}' successfully!", "ok"))
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = CosmicOrange),

@@ -23,14 +23,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.PolicyRegistry
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.AssumptionsViewModel
+import com.example.ui.viewmodel.AssumptionsEvent
 import com.example.ui.theme.*
 
 @Composable
 fun AssumptionsScreen(
-    viewModel: SolarViewModel
+    assumptionsViewModel: AssumptionsViewModel
 ) {
-    val search by viewModel.searchPolicies.collectAsState()
+    val uiState by assumptionsViewModel.uiState.collectAsState()
+    val search = uiState.searchQuery
     val scrollState = rememberScrollState()
 
     val filtered = PolicyRegistry.POLICY_PACK.filter { p ->
@@ -47,7 +49,7 @@ fun AssumptionsScreen(
 
         OutlinedTextField(
             value = search,
-            onValueChange = { viewModel.searchPolicies.value = it },
+            onValueChange = { assumptionsViewModel.onEvent(AssumptionsEvent.SetSearchQuery(it)) },
             placeholder = { Text("Search standards registry (IEEE, NEMA, NEC)…", color = CosmicMute, fontSize = 12.sp) },
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = CosmicMute) },
             singleLine = true,
@@ -67,21 +69,24 @@ fun AssumptionsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             filtered.forEach { policy ->
-                PolicyCollapseItem(policy = policy, viewModel = viewModel)
+                PolicyCollapseItem(policy = policy, assumptionsViewModel = assumptionsViewModel, expandedPolicyId = uiState.expandedPolicyId)
             }
         }
     }
 }
 
 @Composable
-fun PolicyCollapseItem(policy: PolicyRegistry.Policy, viewModel: SolarViewModel) {
-    val expandedId by viewModel.expandedPolicyId.collectAsState()
-    val isExpanded = expandedId == policy.policyId
+fun PolicyCollapseItem(
+    policy: PolicyRegistry.Policy,
+    assumptionsViewModel: AssumptionsViewModel,
+    expandedPolicyId: String?
+) {
+    val isExpanded = expandedPolicyId == policy.policyId
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { viewModel.expandedPolicyId.value = if (isExpanded) null else policy.policyId },
+            .clickable { assumptionsViewModel.onEvent(AssumptionsEvent.ToggleExpandPolicy(policy.policyId)) },
         colors = CardDefaults.cardColors(containerColor = CosmicPanel),
         border = BorderStroke(1.dp, if (isExpanded) CosmicOrange else CosmicBorder)
     ) {

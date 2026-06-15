@@ -26,28 +26,24 @@ import com.example.domain.ApplianceLibrary
 import com.example.ui.navigation.SolarDestinations
 import com.example.ui.navigation.SolarNavHost
 import com.example.ui.theme.*
+import com.example.ui.viewmodel.SharedViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SolarAppLayout(viewModel: SolarViewModel) {
-    val sidebarExpanded by viewModel.sidebarExpanded.collectAsState()
-    val loads by viewModel.loadsList.collectAsState()
+fun SolarAppLayout(sharedViewModel: SharedViewModel) {
+    val sidebarExpanded by sharedViewModel.sidebarExpanded.collectAsState()
+    val loads by sharedViewModel.loadsList.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val activeEditing by viewModel.activeEditingLoad.collectAsState()
-    val isLibraryOpen by viewModel.isLibraryModalOpen.collectAsState()
+    val activeEditing by sharedViewModel.activeEditingLoad.collectAsState()
+    val isLibraryOpen by sharedViewModel.isLibraryModalOpen.collectAsState()
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     
     // Derived single source of truth for current active view route
     val currentView = navBackStackEntry?.destination?.route ?: SolarDestinations.DASHBOARD
-
-    // Sync viewmodel's currentView state for backwards compatibility if needed
-    LaunchedEffect(currentView) {
-        viewModel.navigateTo(currentView)
-    }
 
     // Listen for custom globally routed toast events
     LaunchedEffect(Unit) {
@@ -74,7 +70,7 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
-                                    text = viewModel.projectName.collectAsState().value,
+                                    text = sharedViewModel.projectName.collectAsState().value,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
@@ -99,7 +95,7 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = { viewModel.toggleSidebar() }) {
+                        IconButton(onClick = { sharedViewModel.toggleSidebar() }) {
                             Icon(
                                 imageVector = if (sidebarExpanded) Icons.Default.Menu else Icons.AutoMirrored.Default.List,
                                 contentDescription = "Sidebar Toggle",
@@ -118,10 +114,10 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                                 } else {
                                     (opt as String) to opt
                                 }
-                                val active = viewModel.expertLevel.collectAsState().value == value
+                                val active = sharedViewModel.expertLevel.collectAsState().value == value
                                 FilterChip(
                                     selected = active,
-                                    onClick = { viewModel.updateExpertLevel(value) },
+                                    onClick = { sharedViewModel.updateExpertLevel(value) },
                                     label = { Text(text = label, fontSize = 10.sp, color = if (active) Color.White else CosmicMute) },
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = CosmicOrange,
@@ -261,7 +257,7 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
                     SolarNavHost(
                         navController = navController,
                         loads = loads,
-                        viewModel = viewModel
+                        sharedViewModel = sharedViewModel
                     )
                 }
             }
@@ -271,10 +267,10 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
         activeEditing?.let { editing ->
             EditLoadModal(
                 initialLoad = editing,
-                onDismiss = { viewModel.activeEditingLoad.value = null },
+                onDismiss = { sharedViewModel.activeEditingLoad.value = null },
                 onSave = { saved ->
-                    viewModel.updateLoad(saved)
-                    viewModel.activeEditingLoad.value = null
+                    sharedViewModel.updateLoad(saved)
+                    sharedViewModel.activeEditingLoad.value = null
                     _globalToastChannel.tryEmit(Pair("Specifications saved successfully!", "ok"))
                 }
             )
@@ -282,12 +278,12 @@ fun SolarAppLayout(viewModel: SolarViewModel) {
 
         if (isLibraryOpen) {
             LibraryImportModal(
-                onDismiss = { viewModel.isLibraryModalOpen.value = false },
+                onDismiss = { sharedViewModel.isLibraryModalOpen.value = false },
                 onSelect = { selectedTempl ->
-                    viewModel.isLibraryModalOpen.value = false
+                    sharedViewModel.isLibraryModalOpen.value = false
                     val index = loads.size + 1
                     val loadEntity = ApplianceLibrary.createLoadFromTemplate(selectedTempl, index)
-                    viewModel.activeEditingLoad.value = loadEntity
+                    sharedViewModel.activeEditingLoad.value = loadEntity
                 }
             )
         }

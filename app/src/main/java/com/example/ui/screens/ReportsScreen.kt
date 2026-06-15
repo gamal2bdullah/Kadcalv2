@@ -15,15 +15,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.LoadEntity
 import com.example.domain.Calculations
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.ReportsViewModel
+import com.example.ui.viewmodel.DashboardViewModel
+import com.example.ui.viewmodel.SharedViewModel
 import com.example.ui.theme.*
 
 @Composable
 fun ReportsScreen(
     loads: List<LoadEntity>,
-    viewModel: SolarViewModel
+    reportsViewModel: ReportsViewModel,
+    dashboardViewModel: DashboardViewModel,
+    sharedViewModel: SharedViewModel
 ) {
-    val summaryState by viewModel.summaryState.collectAsState()
+    val summaryState by dashboardViewModel.summaryState.collectAsState()
+    val projectName by sharedViewModel.projectName.collectAsState()
     val scrollState = rememberScrollState()
 
     Column(
@@ -60,7 +65,7 @@ fun ReportsScreen(
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(text = "Compliance Executive Summary", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         Text(
-                            text = "A complete engineering load sheet was calculated for project '${viewModel.projectName.value}'. Fully conforming to standard thermal specifications and continuous rating procedures.",
+                            text = "A complete engineering load sheet was calculated for project '$projectName'. Fully conforming to standard thermal specifications and continuous rating procedures.",
                             color = CosmicText,
                             fontSize = 12.sp,
                             lineHeight = 16.sp

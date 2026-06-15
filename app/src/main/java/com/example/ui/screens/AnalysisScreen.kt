@@ -13,7 +13,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.LoadEntity
 import com.example.domain.Calculations
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.AnalysisViewModel
+import com.example.ui.viewmodel.AnalysisEvent
+import com.example.ui.viewmodel.DashboardViewModel
 import com.example.ui.theme.*
 import com.example.ui.SimpleAreaLineChart
 import com.example.ui.HorizontalBarsChart
@@ -21,10 +23,12 @@ import com.example.ui.HorizontalBarsChart
 @Composable
 fun AnalysisScreen(
     loads: List<LoadEntity>,
-    viewModel: SolarViewModel
+    analysisViewModel: AnalysisViewModel,
+    dashboardViewModel: DashboardViewModel
 ) {
-    val subView by viewModel.analysisSubView.collectAsState()
-    val summaryState by viewModel.summaryState.collectAsState()
+    val uiState by analysisViewModel.uiState.collectAsState()
+    val subView = uiState.analysisSubView
+    val summaryState by dashboardViewModel.summaryState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -45,7 +49,7 @@ fun AnalysisScreen(
                 val active = subView == key
                 FilterChip(
                     selected = active,
-                    onClick = { viewModel.analysisSubView.value = key },
+                    onClick = { analysisViewModel.onEvent(AnalysisEvent.SetSubView(key)) },
                     label = { Text(text = label, color = if (active) Color.White else CosmicMute) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = CosmicOrange,
@@ -113,7 +117,7 @@ fun AnalysisScreen(
                                     color = CosmicAmber,
                                     formatter = { String.format("%.2f kWh/day", it) }
                                 )
-
+ 
                                 Text(
                                     text = "Seasonal Energy fluctuations are predominantly driven by climate control regimes. System batteries must buffer the critical worst-case month.",
                                     color = CosmicMute,
@@ -149,7 +153,7 @@ fun AnalysisScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(text = "Starting Inrush Envelopes (Motor Spikes)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                 Text(text = "Required transient capacity for off-grid setup", color = CosmicMute, fontSize = 11.sp, modifier = Modifier.padding(bottom = 12.dp))
-
+ 
                                 val sortedSurgeLoads = loads.sortedByDescending { Calculations.calcSurgePower(it) }.take(6)
                                 HorizontalBarsChart(
                                     items = sortedSurgeLoads.map { (it.loadName.ifEmpty { it.loadId }) to Calculations.calcSurgePower(it) / 1000.0 },

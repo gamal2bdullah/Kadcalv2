@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -17,14 +16,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.TestsViewModel
 import com.example.ui.theme.*
 
 @Composable
 fun TestsScreen(
-    viewModel: SolarViewModel
+    testsViewModel: TestsViewModel
 ) {
-    val result by viewModel.testSuiteResult.collectAsState()
+    val result by testsViewModel.testSuiteResult.collectAsState()
     val scrollState = rememberScrollState()
 
     Column(
@@ -44,7 +43,7 @@ fun TestsScreen(
             }
 
             Button(
-                onClick = { viewModel.runTestSuite() },
+                onClick = { testsViewModel.runTestSuite() },
                 colors = ButtonDefaults.buttonColors(containerColor = CosmicOrange)
             ) {
                 Text(text = "Execute Audit", fontSize = 12.sp)

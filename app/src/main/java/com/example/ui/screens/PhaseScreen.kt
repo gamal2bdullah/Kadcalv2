@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.sp
 import com.example.data.LoadEntity
 import com.example.domain.Calculations
 import com.example.domain.PhaseBalancer
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.PhaseViewModel
 import com.example.ui.theme.*
 
 @Composable
 fun PhaseScreen(
     loads: List<LoadEntity>,
-    viewModel: SolarViewModel
+    phaseViewModel: PhaseViewModel
 ) {
     val result = PhaseBalancer.balancePhases(loads)
     val scrollState = rememberScrollState()

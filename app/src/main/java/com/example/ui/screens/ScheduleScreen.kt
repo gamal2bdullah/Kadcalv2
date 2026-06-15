@@ -24,7 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.LoadEntity
 import com.example.domain.Calculations
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.ScheduleViewModel
+import com.example.ui.viewmodel.ScheduleEvent
 import com.example.ui._globalToastChannel
 import com.example.ui.theme.*
 import java.io.File
@@ -33,21 +34,14 @@ import java.io.FileOutputStream
 @Composable
 fun ScheduleScreen(
     loads: List<LoadEntity>,
-    viewModel: SolarViewModel
+    scheduleViewModel: ScheduleViewModel
 ) {
-    val search by viewModel.searchSchedule.collectAsState()
-    val categoryFilter by viewModel.filterScheduleCategory.collectAsState()
-    val displayAdvanced by viewModel.showAdvScheduleCols.collectAsState()
+    val uiState by scheduleViewModel.uiState.collectAsState()
+    val displayAdvanced = uiState.displayAdvanced
     val context = LocalContext.current
 
     val scrollHoriz = rememberScrollState()
     val scrollVert = rememberScrollState()
-
-    val filtered = loads.filter { l ->
-        val matchS = search.isEmpty() || l.loadName.contains(search, ignoreCase = true) || l.loadTag.contains(search, ignoreCase = true) || l.loadId.contains(search, ignoreCase = true)
-        val matchC = categoryFilter == "All" || l.categoryMain == categoryFilter
-        matchS && matchC
-    }
 
     Column(
         modifier = Modifier
@@ -66,7 +60,7 @@ fun ScheduleScreen(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { viewModel.showAdvScheduleCols.value = !displayAdvanced },
+                    onClick = { scheduleViewModel.onEvent(ScheduleEvent.ToggleDisplayAdvanced) },
                     colors = ButtonDefaults.buttonColors(containerColor = CosmicPanel2),
                     border = BorderStroke(1.dp, CosmicBorder)
                 ) {
@@ -126,7 +120,7 @@ fun ScheduleScreen(
                     }
 
                     // Data Rows
-                    filtered.forEach { l ->
+                    loads.forEach { l ->
                         val conn = Calculations.calcConnectedLoad(l)
                         val daily = Calculations.calcDailyEnergy(l)
                         val annual = Calculations.calcAnnualEnergy(l)
@@ -203,6 +197,3 @@ fun exportToDeviceCSV(context: Context, loads: List<LoadEntity>) {
         _globalToastChannel.tryEmit(Pair("Export issue: ${e.message}", "err"))
     }
 }
-
-
-

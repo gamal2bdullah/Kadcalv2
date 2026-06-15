@@ -23,15 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.LoadEntity
 import com.example.domain.ValidationRules
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.ValidationViewModel
 import com.example.ui.theme.*
 
 @Composable
 fun ValidationScreen(
-    loads: List<LoadEntity>,
-    viewModel: SolarViewModel
+    validationViewModel: ValidationViewModel
 ) {
-    val matrixState by viewModel.validationMatrixState.collectAsState()
+    val matrixState by validationViewModel.validationMatrix.collectAsState()
     val scrollState = rememberScrollState()
 
     Column(

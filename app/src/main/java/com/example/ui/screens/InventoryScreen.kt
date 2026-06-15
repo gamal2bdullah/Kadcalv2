@@ -28,7 +28,9 @@ import androidx.compose.ui.unit.sp
 import com.example.data.LoadEntity
 import com.example.domain.ApplianceLibrary
 import com.example.domain.Calculations
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.InventoryViewModel
+import com.example.ui.viewmodel.InventoryEvent
+import com.example.ui.viewmodel.SharedViewModel
 import com.example.ui.theme.*
 
 val CATEGORY_OPTIONS = listOf("Lighting","HVAC","Kitchen","Pump","Medical","IT","Industrial","EV","Security","Water","Office","Laundry","Other")
@@ -36,10 +38,12 @@ val CATEGORY_OPTIONS = listOf("Lighting","HVAC","Kitchen","Pump","Medical","IT",
 @Composable
 fun InventoryScreen(
     loads: List<LoadEntity>,
-    viewModel: SolarViewModel
+    inventoryViewModel: InventoryViewModel,
+    sharedViewModel: SharedViewModel
 ) {
-    val search by viewModel.searchInventory.collectAsState()
-    val categoryFilter by viewModel.filterInventoryCategory.collectAsState()
+    val uiState by inventoryViewModel.uiState.collectAsState()
+    val search = uiState.searchQuery
+    val categoryFilter = uiState.categoryFilter
     
     val scrollState = rememberScrollState()
 
@@ -60,7 +64,7 @@ fun InventoryScreen(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { viewModel.isLibraryModalOpen.value = true },
+                    onClick = { sharedViewModel.isLibraryModalOpen.value = true },
                     colors = ButtonDefaults.buttonColors(containerColor = CosmicPanel2),
                     border = BorderStroke(1.dp, CosmicBorder)
                 ) {
@@ -69,7 +73,7 @@ fun InventoryScreen(
                     Text(text = "Library", fontSize = 12.sp)
                 }
                 Button(
-                    onClick = { viewModel.activeEditingLoad.value = ApplianceLibrary.createLoadFromTemplate(ApplianceLibrary.APPLIANCE_LIBRARY[0], loads.size + 1) },
+                    onClick = { sharedViewModel.activeEditingLoad.value = ApplianceLibrary.createLoadFromTemplate(ApplianceLibrary.APPLIANCE_LIBRARY[0], loads.size + 1) },
                     colors = ButtonDefaults.buttonColors(containerColor = CosmicOrange)
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = null)
@@ -87,7 +91,7 @@ fun InventoryScreen(
         ) {
             OutlinedTextField(
                 value = search,
-                onValueChange = { viewModel.searchInventory.value = it },
+                onValueChange = { inventoryViewModel.onEvent(InventoryEvent.SetSearchQuery(it)) },
                 placeholder = { Text("Search by name, tag, or ID…", color = CosmicMute, fontSize = 12.sp) },
                 leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = CosmicMute) },
                 singleLine = true,
@@ -114,7 +118,8 @@ fun InventoryScreen(
                     .height(52.dp)
                     .clickable { 
                         val nextIdx = (CATEGORY_OPTIONS.indexOf(categoryFilter) + 2) % (CATEGORY_OPTIONS.size + 1)
-                        viewModel.filterInventoryCategory.value = if (nextIdx == 0) "All" else CATEGORY_OPTIONS[nextIdx - 1]
+                        val nextCategory = if (nextIdx == 0) "All" else CATEGORY_OPTIONS[nextIdx - 1]
+                        inventoryViewModel.onEvent(InventoryEvent.SetCategoryFilter(nextCategory))
                     }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
@@ -157,7 +162,7 @@ fun InventoryScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 filteredLoads.forEach { l ->
-                    LoadListItemCard(l = l, viewModel = viewModel)
+                    LoadListItemCard(l = l, sharedViewModel = sharedViewModel)
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -166,14 +171,14 @@ fun InventoryScreen(
 }
 
 @Composable
-fun LoadListItemCard(l: LoadEntity, viewModel: SolarViewModel) {
+fun LoadListItemCard(l: LoadEntity, sharedViewModel: SharedViewModel) {
     val connLoad = Calculations.calcConnectedLoad(l)
     val dailyWh = Calculations.calcDailyEnergy(l)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { viewModel.activeEditingLoad.value = l },
+            .clickable { sharedViewModel.activeEditingLoad.value = l },
         colors = CardDefaults.cardColors(containerColor = CosmicPanel),
         border = BorderStroke(1.dp, CosmicBorder)
     ) {
@@ -221,7 +226,7 @@ fun LoadListItemCard(l: LoadEntity, viewModel: SolarViewModel) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     IconButton(
-                        onClick = { viewModel.duplicateLoad(l) },
+                        onClick = { sharedViewModel.duplicateLoad(l) },
                         modifier = Modifier
                             .size(24.dp)
                             .clip(CircleShape)
@@ -230,7 +235,7 @@ fun LoadListItemCard(l: LoadEntity, viewModel: SolarViewModel) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = "Duplicate", tint = CosmicText, modifier = Modifier.size(12.dp))
                     }
                     IconButton(
-                        onClick = { viewModel.deleteLoad(l) },
+                        onClick = { sharedViewModel.deleteLoad(l) },
                         modifier = Modifier
                             .size(24.dp)
                             .clip(CircleShape)

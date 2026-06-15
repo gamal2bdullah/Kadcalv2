@@ -27,7 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.LoadEntity
 import com.example.domain.Calculations
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.DashboardViewModel
+import com.example.ui.viewmodel.SharedViewModel
 import com.example.ui.theme.*
 import com.example.ui.SimpleAreaLineChart
 import com.example.ui.SimpleDonutChart
@@ -35,9 +36,10 @@ import com.example.ui.SimpleDonutChart
 @Composable
 fun DashboardScreen(
     loads: List<LoadEntity>,
-    viewModel: SolarViewModel
+    dashboardViewModel: DashboardViewModel,
+    sharedViewModel: SharedViewModel
 ) {
-    val summaryState by viewModel.summaryState.collectAsState()
+    val summaryState by dashboardViewModel.summaryState.collectAsState()
     val scrollState = rememberScrollState()
 
     Column(
@@ -66,7 +68,7 @@ fun DashboardScreen(
             is com.example.core.result.UiState.Success -> {
                 val summary = state.data
                 // Hero Section
-                HeroBanner(viewModel, summary)
+                HeroBanner(sharedViewModel, summary)
 
                 // KPI Summary Matrix
                 Row(
@@ -334,7 +336,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun HeroBanner(viewModel: SolarViewModel, summary: Calculations.Summary) {
+fun HeroBanner(viewModel: SharedViewModel, summary: Calculations.Summary) {
     val level by viewModel.expertLevel.collectAsState()
     val name by viewModel.projectName.collectAsState()
 

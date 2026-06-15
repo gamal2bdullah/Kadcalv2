@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.SolarAppLayout
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.SharedViewModel
 import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,8 +15,8 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       MyApplicationTheme {
-        val viewModel: SolarViewModel = viewModel(factory = SolarViewModel.Factory)
-        SolarAppLayout(viewModel = viewModel)
+        val sharedViewModel: SharedViewModel = viewModel(factory = SharedViewModel.Factory)
+        SolarAppLayout(sharedViewModel = sharedViewModel)
       }
     }
   }

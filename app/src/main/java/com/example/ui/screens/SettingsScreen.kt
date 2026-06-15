@@ -20,16 +20,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.SolarViewModel
+import com.example.ui.viewmodel.SharedViewModel
 import com.example.ui._globalToastChannel
 import com.example.ui.theme.*
 
 @Composable
 fun SettingsScreen(
-    viewModel: SolarViewModel
+    sharedViewModel: SharedViewModel
 ) {
-    val name by viewModel.projectName.collectAsState()
-    val currentLevel by viewModel.expertLevel.collectAsState()
+    val name by sharedViewModel.projectName.collectAsState()
+    val currentLevel by sharedViewModel.expertLevel.collectAsState()
     val scrollState = rememberScrollState()
 
     Column(
@@ -50,7 +50,7 @@ fun SettingsScreen(
                 
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { viewModel.updateProjectName(it) },
+                    onValueChange = { sharedViewModel.updateProjectName(it) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -81,7 +81,7 @@ fun SettingsScreen(
                             .clip(RoundedCornerShape(8.dp))
                             .background(if (active) CosmicOrange.copy(alpha = 0.15f) else CosmicPanel2)
                             .border(BorderStroke(1.dp, if (active) CosmicOrange else CosmicBorder), RoundedCornerShape(8.dp))
-                            .clickable { viewModel.updateExpertLevel(lvl) }
+                            .clickable { sharedViewModel.updateExpertLevel(lvl) }
                             .padding(12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -106,7 +106,7 @@ fun SettingsScreen(
                 listOf("basic" to "Basic residential sizing", "professional" to "Professional smart automation", "commercial" to "Industrial three-phase factories").forEach { (key, label) ->
                     Button(
                         onClick = {
-                            viewModel.loadPreset(key)
+                            sharedViewModel.loadPreset(key)
                             _globalToastChannel.tryEmit(Pair("Loaded standard template preset successfully!", "ok"))
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = CosmicPanel2),
@@ -129,7 +129,7 @@ fun SettingsScreen(
 
                 Button(
                     onClick = {
-                        viewModel.navigateTo("about")
+                        _globalToastChannel.tryEmit(Pair("Select 'حول التطبيق' from Sidebar menu!", "info"))
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = CosmicOrange),
                     modifier = Modifier.fillMaxWidth().height(48.dp)
