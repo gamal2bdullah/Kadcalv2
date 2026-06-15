@@ -61,6 +61,6 @@ class AppContainerImpl(private val context: Context) : AppContainer {
     }
 
     override val sharedPreferences: SharedPreferences by lazy {
-        context.getSharedPreferences("itel_solar_prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences("kadcal_secure_prefs", Context.MODE_PRIVATE)
     }
 }
