@@ -1,0 +1,59 @@
+name: Build Debug Android Application
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Debug Artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x gradlew
+
+      - name: Setup Environment Config (.env)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "Embedding GEMINI_API_KEY from GitHub Secrets..."
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> .env
+          else
+            echo "No GEMINI_API_KEY secret detected. Using secure placeholder for CI build..."
+            echo "GEMINI_API_KEY=mock_api_key_ci_testing_only" >> .env
+          fi
+
+      - name: Compile and Build Debug App
+        run: |
+          echo "Triggering debug build pipeline..."
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Organize Artifact Outputs
+        run: |
+          mkdir -p build-debug-apk
+          cp app/build/outputs/apk/debug/*.apk build-debug-apk/ 2>/dev/null || true
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: build-debug-apk/
+          retention-days: 7
+
