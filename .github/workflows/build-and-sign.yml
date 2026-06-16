@@ -25,6 +25,11 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      - name: Regenerate Gradle Wrapper (Fix Corrupt Wrapper Jar)
+        run: |
+          echo "Regenerating professional gradle wrapper to avoid checkout corruptions..."
+          gradle wrapper
+
       - name: Make Gradle Wrapper Executable
         run: chmod +x gradlew
 
